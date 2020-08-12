@@ -94,7 +94,27 @@ class Products with ChangeNotifier {
   }
 
   void deleteProduct(String productId) {
-    _items.removeWhere((product) => product.id == productId);
+    final url =
+        "https://shop-app-b88e9.firebaseio.com/products/$productId.jsontin";
+
+    // This pattern is called optimistic updating
+    // we don't wait for delete request result so we remove item immediatly
+    // if delete from server failed we don't won't to remove the item from the list
+    // so we use this pattern to avoid that problem
+
+    final existingProductIndex =
+        _items.indexWhere((product) => product.id == productId);
+    var existingProduct = _items[existingProductIndex];
+
+    _items.removeAt(existingProductIndex);
+    http
+        .delete(url)
+        .then(
+          (_) => existingProduct = null,
+        )
+        .catchError(
+          (_) => _items.insert(existingProductIndex, existingProduct),
+        );
     notifyListeners();
   }
 }
