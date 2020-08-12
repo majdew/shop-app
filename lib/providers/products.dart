@@ -53,37 +53,36 @@ class Products with ChangeNotifier {
     return _items.where((product) => product.isFavorite == true).toList();
   }
 
-  Future<void> addProduct(Product product) {
+  Future<void> addProduct(Product product) async {
     const url = "https://shop-app-b88e9.firebaseio.com/products.json";
+    try {
+      final response = await http.post(
+        url,
+        body: json.encode(
+          {
+            "title": product.title,
+            "description": product.description,
+            "imageUrl": product.imageUrl,
+            "price": product.price,
+            "isFavorite": product.isFavorite,
+          },
+        ),
+      );
 
-    return http
-        .post(
-      url,
-      body: json.encode(
-        {
-          "title": product.title,
-          "description": product.description,
-          "imageUrl": product.imageUrl,
-          "price": product.price,
-          "isFavorite": product.isFavorite,
-        },
-      ),
-    )
-        .then(
-      (resopnse) {
-        final newProduct = Product(
-          id: json.decode(resopnse.body)['name'],
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          imageUrl: product.imageUrl,
-        );
+      final newProduct = Product(
+        id: json.decode(response.body)['name'],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      );
 
-        print(newProduct);
-        _items.add(newProduct);
-        notifyListeners();
-      },
-    );
+      _items.add(newProduct);
+      notifyListeners();
+    } catch (error) {
+      print(error);
+      throw error;
+    }
   }
 
   void updateProduct(String productId, Product newProduct) {
