@@ -32,15 +32,15 @@ class ProductItem extends StatelessWidget {
           ),
         ),
         footer: GridTileBar(
-          leading: Consumer<Product>(
-            builder: (context, product, _) => IconButton(
+          leading: Consumer<Product>(builder: (context, product, _) {
+            return IconButton(
               icon: Icon(
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
               ),
               onPressed: () => product.toggleFavorite(),
               color: Theme.of(context).accentColor,
-            ),
-          ),
+            );
+          }),
           title: Text(
             product.title,
             textAlign: TextAlign.center,

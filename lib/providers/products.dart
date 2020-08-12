@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../models/http_exception.dart';
 
 import 'product.dart';
 
@@ -28,16 +29,19 @@ class Products with ChangeNotifier {
       final List<Product> loadedProducts = [];
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       extractedData.forEach((productId, productData) {
-        loadedProducts.add(Product(
+        loadedProducts.add(
+          Product(
             id: productId,
             title: productData['title'],
             description: productData['description'],
             imageUrl: productData['imageUrl'],
-            price: productData['price']));
+            price: productData['price'],
+            isFavorite: productData['isFavorite'],
+          ),
+        );
       });
       _items = loadedProducts;
       notifyListeners();
-      print(json.decode(response.body));
     } catch (error) {
       throw error;
     }
@@ -53,23 +57,21 @@ class Products with ChangeNotifier {
             "description": product.description,
             "imageUrl": product.imageUrl,
             "price": product.price,
-            "isFavorite": product.isFavorite,
           },
         ),
       );
 
       final newProduct = Product(
-        id: json.decode(response.body)['name'],
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        imageUrl: product.imageUrl,
-      );
+          id: json.decode(response.body)['name'],
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          isFavorite: product.isFavorite);
 
       _items.add(newProduct);
       notifyListeners();
     } catch (error) {
-      print(error);
       throw error;
     }
   }
@@ -80,41 +82,46 @@ class Products with ChangeNotifier {
         "https://shop-app-b88e9.firebaseio.com/products/$productId.json";
 
     if (productIndex >= 0) {
-      await http.patch(url,
-          body: json.encode({
+      await http.patch(
+        url,
+        body: json.encode(
+          {
             "title": newProduct.title,
             "description": newProduct.description,
             "imageUrl": newProduct.imageUrl,
             "price": newProduct.price
-          }));
+          },
+        ),
+      );
       _items[productIndex] = newProduct;
       notifyListeners();
-    } else
-      print("..");
+    } 
   }
 
-  void deleteProduct(String productId) {
+  Future<void> deleteProduct(String productId) async {
     final url =
-        "https://shop-app-b88e9.firebaseio.com/products/$productId.jsontin";
+        "https://shop-app-b88e9.firebaseio.com/products/$productId.json";
 
     // This pattern is called optimistic updating
     // we don't wait for delete request result so we remove item immediatly
     // if delete from server failed we don't won't to remove the item from the list
-    // so we use this pattern to avoid that problem
+    // so we use this pattern to avoid that problem using roll back
+    // since delete don't throw errors i will create my own errror to reach catch error block
 
     final existingProductIndex =
         _items.indexWhere((product) => product.id == productId);
     var existingProduct = _items[existingProductIndex];
 
     _items.removeAt(existingProductIndex);
-    http
-        .delete(url)
-        .then(
-          (_) => existingProduct = null,
-        )
-        .catchError(
-          (_) => _items.insert(existingProductIndex, existingProduct),
-        );
     notifyListeners();
+
+    final response = await http.delete(url);
+
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException("Could not delete this product .");
+    }
+    existingProduct = null;
   }
 }
