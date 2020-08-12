@@ -27,7 +27,7 @@ class Product with ChangeNotifier {
   }
 
   Future<void> toggleFavorite() async {
-    final url = "https://shop-app-b88e9.firebaseio.com/products/$id";
+    final url = "https://shop-app-b88e9.firebaseio.com/products/$id.json";
     bool oldStatus = isFavorite;
 
     _setFavoriteValue(!isFavorite);
