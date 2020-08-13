@@ -8,9 +8,10 @@ import 'product.dart';
 
 class Products with ChangeNotifier {
   final String authToken;
+  final String userId;
   List<Product> _items = [];
 
-  Products(this.authToken, this._items);
+  Products(this.authToken, this._items, this.userId);
 
   List<Product> get items {
     return [..._items];
@@ -25,7 +26,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    final String url =
+    var url =
         "https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken";
     try {
       final response = await http.get(url);
@@ -33,7 +34,14 @@ class Products with ChangeNotifier {
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       print(extractedData);
       if (extractedData == null) return;
+      url =
+          "https://shop-app-b88e9.firebaseio.com/userFavorites/$userId.json?auth=$authToken";
+
+      final favoriteResponse = await http.get(url);
+      final favoriteProducts = json.decode(favoriteResponse.body);
+      print(favoriteProducts);
       extractedData.forEach((productId, productData) {
+        print(favoriteProducts[productId]);
         loadedProducts.add(
           Product(
             id: productId,
@@ -41,7 +49,9 @@ class Products with ChangeNotifier {
             description: productData['description'],
             imageUrl: productData['imageUrl'],
             price: productData['price'],
-            isFavorite: productData['isFavorite'],
+            isFavorite: favoriteProducts == null
+                ? false
+                : favoriteProducts[productId] ?? false,
           ),
         );
       });
@@ -53,7 +63,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    final String url = "https://shop-app-b88e9.firebaseio.com/products.json";
+    final String url =
+        "https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken";
     try {
       final response = await http.post(
         url,
@@ -68,12 +79,12 @@ class Products with ChangeNotifier {
       );
 
       final newProduct = Product(
-          id: json.decode(response.body)['name'],
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          imageUrl: product.imageUrl,
-          isFavorite: product.isFavorite);
+        id: json.decode(response.body)['name'],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      );
 
       _items.add(newProduct);
       notifyListeners();
@@ -85,7 +96,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String productId, Product newProduct) async {
     int productIndex = _items.indexWhere((product) => productId == product.id);
     final url =
-        "https://shop-app-b88e9.firebaseio.com/products/$productId.json";
+        "https://shop-app-b88e9.firebaseio.com/products/$productId.json?auth=$authToken";
 
     if (productIndex >= 0) {
       await http.patch(
@@ -106,7 +117,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String productId) async {
     final url =
-        "https://shop-app-b88e9.firebaseio.com/products/$productId.json";
+        "https://shop-app-b88e9.firebaseio.com/products/$productId.json?auth=$authToken";
 
     // This pattern is called optimistic updating
     // we don't wait for delete request result so we remove item immediatly
