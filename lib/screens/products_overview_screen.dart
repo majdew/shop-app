@@ -19,6 +19,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var _showFavoritesProducts = false;
   var _isInit = true;
   var _isLoading = false;
+ 
 
   @override
   void initState() {
@@ -92,7 +93,9 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : ProductsGrid(_showFavoritesProducts , ),
+          : ProductsGrid(
+              _showFavoritesProducts,
+            ),
     );
   }
 }

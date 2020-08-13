@@ -7,9 +7,10 @@ import '../models/http_exception.dart';
 import 'product.dart';
 
 class Products with ChangeNotifier {
-  final String url = "https://shop-app-b88e9.firebaseio.com/products.json";
-
+  final String authToken;
   List<Product> _items = [];
+
+  Products(this.authToken, this._items);
 
   List<Product> get items {
     return [..._items];
@@ -24,6 +25,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
+    final String url =
+        "https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken";
     try {
       final response = await http.get(url);
       final List<Product> loadedProducts = [];
@@ -50,6 +53,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
+    final String url = "https://shop-app-b88e9.firebaseio.com/products.json";
     try {
       final response = await http.post(
         url,
