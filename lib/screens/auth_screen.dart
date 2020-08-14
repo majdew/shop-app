@@ -108,6 +108,7 @@ class _AuthCardState extends State<AuthCard>
 
   AnimationController _controller;
   Animation<Size> _heightAnimation;
+  Animation<double> _opacityAnimation;
 
   @override
   void initState() {
@@ -125,6 +126,16 @@ class _AuthCardState extends State<AuthCard>
       CurvedAnimation(
         parent: _controller,
         curve: Curves.linear,
+      ),
+    );
+
+    _opacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
       ),
     );
   }
@@ -266,19 +277,30 @@ class _AuthCardState extends State<AuthCard>
                     _authData['password'] = value;
                   },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match!';
-                            }
-                          }
-                        : null,
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 180 : 0,
                   ),
+                  curve: Curves.easeInOut,
+                  child: FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: TextFormField(
+                      enabled: _authMode == AuthMode.Signup,
+                      decoration:
+                          InputDecoration(labelText: 'Confirm Password'),
+                      obscureText: true,
+                      validator: _authMode == AuthMode.Signup
+                          ? (value) {
+                              if (value != _passwordController.text) {
+                                return 'Passwords do not match!';
+                              }
+                            }
+                          : null,
+                    ),
+                  ),
+                ),
                 SizedBox(
                   height: 20,
                 ),
