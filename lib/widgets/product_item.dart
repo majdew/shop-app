@@ -31,21 +31,27 @@ class ProductItem extends StatelessWidget {
               arguments: product.id,
             );
           },
-          child: Image.network(
-            product.imageUrl,
+          child: FadeInImage(
+            placeholder: AssetImage('assets/images/product-placeholder.png'),
+            image: NetworkImage(
+              product.imageUrl,
+            ),
             fit: BoxFit.cover,
           ),
         ),
         footer: GridTileBar(
-          leading: Consumer<Product>(builder: (context, product, _) {
-            return IconButton(
-              icon: Icon(
-                product.isFavorite ? Icons.favorite : Icons.favorite_border,
-              ),
-              onPressed: () => product.toggleFavorite(authData.token , authData.userId),
-              color: Theme.of(context).accentColor,
-            );
-          }),
+          leading: Consumer<Product>(
+            builder: (context, product, _) {
+              return IconButton(
+                icon: Icon(
+                  product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                ),
+                onPressed: () =>
+                    product.toggleFavorite(authData.token, authData.userId),
+                color: Theme.of(context).accentColor,
+              );
+            },
+          ),
           title: Text(
             product.title,
             textAlign: TextAlign.center,
