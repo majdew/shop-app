@@ -30,19 +30,19 @@ class Products with ChangeNotifier {
         filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     var url =
         'https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken&$filterString';
-    print(url);
+  
     try {
       final response = await http.get(url);
       final List<Product> loadedProducts = [];
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      print(extractedData);
+ 
       if (extractedData == null) return;
       url =
           "https://shop-app-b88e9.firebaseio.com/userFavorites/$userId.json?auth=$authToken";
 
       final favoriteResponse = await http.get(url);
       final favoriteProducts = json.decode(favoriteResponse.body);
-      print(favoriteProducts);
+ 
       extractedData.forEach((productId, productData) {
         loadedProducts.add(
           Product(
