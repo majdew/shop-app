@@ -25,9 +25,12 @@ class Products with ChangeNotifier {
     return _items.where((product) => product.isFavorite == true).toList();
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    String filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     var url =
-        "https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken";
+        'https://shop-app-b88e9.firebaseio.com/products.json?auth=$authToken&$filterString';
+    print(url);
     try {
       final response = await http.get(url);
       final List<Product> loadedProducts = [];
@@ -41,7 +44,6 @@ class Products with ChangeNotifier {
       final favoriteProducts = json.decode(favoriteResponse.body);
       print(favoriteProducts);
       extractedData.forEach((productId, productData) {
-        print(favoriteProducts[productId]);
         loadedProducts.add(
           Product(
             id: productId,
@@ -70,6 +72,7 @@ class Products with ChangeNotifier {
         url,
         body: json.encode(
           {
+            "creatorId": userId,
             "title": product.title,
             "description": product.description,
             "imageUrl": product.imageUrl,
